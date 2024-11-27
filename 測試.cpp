@@ -1,316 +1,200 @@
-# include <stdio.h>
-# include <string.h>
-# include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 struct SNode {
-	long int freq; // ÀW²v
-	int depth; // ²`«×¡A½s½Xªø«×
-	char gray;
-	struct SNode * pPar; // ¤÷µ²ÂI 
-	struct SNode * pLeft; // ¥ªµ²ÂI
-	struct SNode * pRight; // ¥kµ²ÂI
-	char * code; // ¦ì¤¸²Õ½s½X
-
+    long int freq;          // é »ç‡
+    int depth;              // æ·±åº¦ï¼Œç·¨ç¢¼é•·åº¦
+    char gray;              // ç°åº¦å€¼
+    struct SNode* pPar;     // çˆ¶ç¯€é» 
+    struct SNode* pLeft;    // å·¦å­ç¯€é»
+    struct SNode* pRight;   // å³å­ç¯€é»
+    char* code;             // Huffman ç·¨ç¢¼
 };
-struct SNode nodes[256]; // ¦U¦ì¤¸²Õ½s½X
-struct SNode tree[520];
-struct SNode* head = 0; // ½s½XÁ{®É¶¤¦C¡A«ü¦V²Ä¤@¦ìªº«ü°w
-struct SNode* temp = 0; // Á{®É«ü°w¡A¥Î©ó¸Ñ½X®É¡A«ü¦V·í«e¤w¨«¨ìªºµ²ÂI
-int m_iCodeNum; // ¤w¸g½s½Xªº­Ó¼Æ
-int m_iRead;
-long int imcodenum = 0;
-//////////////¹ïµ²ÂI¼Æ²Õ¶i¦æªì©l¤Æ///////////////////
-void init(struct SNode*p, int n) {
-	int i;
-	for (i = 0; i < n; i++) {
-		p->code = NULL;
-		p->freq = 0;
-		p->pLeft = NULL;
-		p->pPar = NULL;
-		p->pRight = NULL;
-		p->depth = 0;
-		p->gray = i;
-		p = p + 1;
-	}
-}
-///////////²Î­p¨C­Ó¦Ç«×­ÈªºÀW¼Æ////////////////////
-void freqadd(unsigned char n)
-{
-	nodes[n].freq++;//nodes²Än­Ó¤¸¯ÀÀx¦sªº¬°¦Ç«×­È¬°n¹ïÀ³ªºµ²ÂI
-}
-/////////±N¨C­Ó¦Ç«×­È®Ú¾Ú¨äÀW¼Æ´¡¤J¤jÁ{®ÉÁåªí¤¤¡A¥Ñ¤p¨ì¤j//////////////
-void addtolist(struct SNode* pNode)
-{
-	if (head == NULL)  				// ¶¤¦C¬°ªÅ¡A		
 
-	{
-		head = pNode;// ª½±µ¥[¤JÀY³¡
-	}
-	else
-	{
-		if (pNode->freq < head->freq)//·í·s¥[¤Jªºµ²ÂIªºÀW¼Æ¤p©óheadµ²ÂIªºÀW¼Æ®É¡A±N·sµ²ÂI©ñ¨ì¶¤­º
-		{
-			pNode->pPar = head;
-			head = pNode;
-		}
-		else
-		{
-			struct	SNode* p = head;
-			while ((p->pPar != 0) && (p->pPar->freq < pNode->freq))
-			{
-				p = p->pPar;
-			}
-			pNode->pPar = p->pPar;
-			p->pPar = pNode;
-		}
-	}
-}
-//////////////////¥Í¦¨½s½X//////////////////////////////
-void createcode(struct SNode * snode) {
-	struct	SNode* p = snode;
-	int post = 0;
-	if (snode->depth == 1) {//Á{®É¶¤¦C¤¤¥u¦³¤@­Ó¤¸¯À
-		snode->code = (char *)malloc(sizeof(char));
-		snode->code[0] = '0';
-	}
-	else {
-		snode->code = (char *)malloc(sizeof(char)*snode->depth);//¬°½s½Xµ²ªG¤À°tÀx¦sªÅ¶¡
-		post = snode->depth - 1;
-		snode->code[post] = '\0';
-		post--;
-		while (p->pPar != NULL) {
-			if (p == p->pPar->pLeft) // ¸Óµ²ÂI¬°¨ä¤÷¸`ÂIªº¥ª«Ä¤l
-			{
-				snode->code[post] = '0';
-			}
-			else
-			{
-				snode->code[post] = '1';//¸Óµ²ÂI¬°¨ä¤÷¸`ÂIªº¥k«Ä¤l
-			}
-			post--;
-			p = p->pPar;
-		}
-	}
-}
-/////////// ¼W¥[µ²ÂI¨à¤l½s½Xªø«×//////////////////////////
-void AddChildLen(struct SNode* pNode)
-{
-	pNode->depth++;
-	if (pNode->pLeft != NULL)
-	{
-		AddChildLen(pNode->pLeft);
-	}
-	if (pNode->pRight != NULL)
-	{
-		AddChildLen(pNode->pRight);
-	}
-}
-/////////////////ºc«Ø½s½Xhuffman¾ğ/////////////////
-void createcodetree(struct SNode *ptree, int len) {
-	int offset, i = 0;
+struct SNode nodes[256];    // æ¯å€‹ç°åº¦å€¼çš„ç¯€é»
+struct SNode tree[512];     // Huffman æ¨¹çš„ç¯€é»
+struct SNode* head = NULL;  // è‡¨æ™‚éšŠåˆ—çš„é ­æŒ‡é‡
+int totalNodes;             // æ¨¹ä¸­ç¯€é»çš„ç¸½æ•¸
 
-	while (head != NULL && head->pPar != NULL)
-	{
-		// ¨ú¥X«e¨â­ÓÀW¼Æ³Ì¤pµ²ÂI
-		struct SNode *p1 = head;
-		struct SNode *p2 = head->pPar;
-		head = p2->pPar;
-
-
-		offset = len + i;
-		ptree[offset].freq = p1->freq + p2->freq; // ÀW²v¬°¨âªÌ¤§©M
-		ptree[offset].pLeft = p1;
-		ptree[offset].pRight = p2;
-		p1->pPar = &ptree[offset];
-		p2->pPar = &ptree[offset];
-		AddChildLen(&ptree[offset]);//½Õ¾ã¾ğ¤¤¨C­Óµ²ÂIªº²`«×
-		addtolist(&ptree[offset]);//±N·s²£¥Íªºµ²ÂI¡A©ñ¨ìÁ{®É¶¤¦C¤¤
-		i++;
-	}
-	// ºc«Ø¾ğ§¹¦¨¡A¥Í¦¨½s½X
-	for (i = 0; i < 256; i++)
-	{
-		if (nodes[i].freq > 0)
-		{
-			createcode(&nodes[i]);
-		}
-	}
-
-
-}
-/////////////////////////////////ªğ¦^½s½X«áªº©Ò¦³½X¤¸ªºªø«×©M////////////////////////////
-int getallcodelen() {
-	int alllen = 0, i = 0;
-	for (; i < 256; i++) {
-		alllen = alllen + nodes[i].depth - 1;
-	}
-	return alllen;
-}
-////////////////////±N©Ò¦³ªºµ²ÂIªº½s½X©ñ¨ìcodebuf½w½Ä¤¤/////////////////////////
-char * getcode(int len) {
-	char *codebuf;
-	int i, offset = 0;
-	codebuf = (char *)malloc(sizeof(char)*(len + 1));
-	codebuf[len] = '\0';
-	for (i = 0; i < 256; i++) {
-		strcpy(codebuf + offset, nodes[i].code);
-		offset += (nodes[i].depth - 1);
-	}
-
-	return codebuf;
-}
-////////////////////////////½s½X//////////////////////////////////
-void huffmancode() {
-	struct SNode *p;//¤¤¶¡«ü°w
-	unsigned char b[1024];//°µ½w½Ä¥Î
-	char * buf, *test;
-	int n = 0, len = 0, j = 0;
-	int i = 0;
-	int codelens = 0;//©Ò¦³½s½XªºÁ`ªø«×¡C
-	FILE * fpin, *fpout;
-	init(nodes, 256);//±N¨C¤@­Óµ²ÂIªì©l¤Æ
-	init(tree, 511);
-	//for(i=0;i<256;i++){
-		//printf("gray is %d\n",nodes[i].gray);
-	//}
-	if ((fpin = fopen("lena.bmp", "rb")) == NULL) {
-		printf("file open error\n");
-	}//¥´¶}¹Ï¹³¤å¥ó
-	fseek(fpin, 54, 0);//«e54¦ì¤¸²Õªº¤å¥ó¬°¤å¥óÀY©M¹Ï¹³¸ê°T»İ­n¸õ¹L
-	len = fread(b, sizeof(char), 1024, fpin);//´`ÀôÅª¥X¹Ï¹³ªº¼Æ¾Ú³¡¤À
-	while (len > 0)
-	{
-
-		for (i = 0; i < len; i++)
-		{
-			freqadd(b[i]);//²Î­p¸Ó¦Ç«×­ÈªºÀW¼Æ
-		}
-		len = fread(b, sizeof(char), 1024, fpin);
-	}
-	///®Ú¾Ú¦Ç«×­ÈªºÀW¼Æ±q¤p¨ì¤j¶i¦æ±Æ§Ç///////
-	for (i = 0, len = 0; i < 256; i++) {//±N­Óµ²ÂI¥[¤JÁ{®É¶¤¦C¡A¨Ã±q¤p¨ì¤j±Æ§Ç
-		if (nodes[i].freq > 0) {
-			addtolist(&nodes[i]);
-			nodes[i].depth++;
-			// printf("%d\n",nodes[i].freq);
-			len++;
-			tree[i] = nodes[i];
-		}
-
-	}
-	createcodetree(tree, len);//«Ø¥ßhuffman¾ğ¡A¨Ã¶i¦æ½s½X
-
-	codelens = getallcodelen();//±o¨ì©Ò¦³¤¸¯À½s½X«áÁ`ªº½s½Xªø«×
-	//printf("%d\n",codelens);
-	buf = getcode(codelens);//±N©Ò¦³ªº½s½X¼È¦s¨ìbuf½w½Ä¸Ì
-	printf("-----------------------------¨C­Ó¦Ç«×­È©Ò¹ïÀ³ªº½s½X---------------------------\n");
-	for (n = 0; n < 256; n++) {
-		printf("%d:%s\n", n, nodes[n].code);
-	}
-	printf("\n\n");
-	printf("¹Ï¹³½s½X¥¿¦b¶i¦æ¤¤.....\n\n");
-
-	if ((fpout = fopen("huffman.txt", "wb+")) == NULL) {
-		printf("file open error");
-		exit(1);
-	}
-	fseek(fpin, 54, 0);
-	len = fread(b, sizeof(char), 1024, fpin);//´`ÀôÅª¥X¹Ï¹³ªº¼Æ¾Ú³¡¤À
-	while (len > 0) {
-		for (i = 0; i < len; i++) {
-			n = b[i];
-			for (j = 0; j < (nodes[n].depth - 1); j++) {
-
-				fwrite(&nodes[n].code[j], sizeof(char), 1, fpout);
-				//imcodenum++;
-			}
-		}
-		len = fread(b, sizeof(char), 1024, fpin);
-	}
-	//printf("imcodenum=%ld\n",imcodenum);
-	printf("¹Ï¹³½s½X§¹¦¨\n\n");
-	fclose(fpin);//Ãö³¬¤å¥ó«ü°w
-	fclose(fpout);
-
-}
-////////////////////¸Ñ½X////////////////////////
-void decode() {
-	FILE * hufin, *hufout, *imgin;
-	struct SNode *p;
-	int i = 0, n = 0, num = 0;
-	char b;
-	char debuf[507132];
-	//debuf=(char *)malloc(sizeof(char)*(len+1));//¤À°t©Ò»İªº°O¾ĞÅé
-	//debuf[len]='\0'; 
-	if ((imgin = fopen("lena.bmp", "rb")) == NULL) {
-		printf("file open error\n");
-		exit(1);
-	}
-
-	if ((hufout = fopen("decode.bmp", "wb+")) == NULL) {//¥´¶}Àx¦s¸Ñ½Xµ²ªGªº¤å¥ó
-		printf("file open error");
-		exit(1);
-	}
-
-	if ((hufin = fopen("huffman.txt", "rt+")) == NULL) {//¥´¶}Àx¦s½s½Xµ²ªGªº¤å¥ó
-		printf("huffman.txt open error\n");
-		exit(1);
-	}
-	fread(debuf, sizeof(char), 54, imgin);//Åª¥X­ì©l¹Ï¹³ªº¤å¥óÀY¡A¹Ï¹³¸ê°T©ñ¨ìb¤¤¡A¦]¬°¤å¥óÀY¨S¦³¶i¦æ½s½X©Ò¥HµL»İ¸Ñ½Xª½±µ«ş¨©
-	fwrite(debuf, sizeof(char), 54, hufout);//±N¤å¥óÀY¡A¹Ï¹³¸ê°T©ñ¨ì¸Ñ½X«áªº¤å¥ó¤¤
-	//n=len+1;
-	fgets(debuf, 507132, hufin);  //±q¤å¥ó¤¤Åª¥X©Ò¦³ªº½s½X§Ç¦C¡A¥uÅªn-1­Ó²Ä¡A¨Ã¦Û°Ê¨Ïb¡in¡j¬°¡¥\0¡¦
-	p = head;                //¨C¦¸¸Ñ½X³£­n±q¾ğªº®Ú¸`ÂI¶}©l
-	for (i = 0; debuf[i] != '\0'; i++) {//¶}©l¸Ñ½X
-		switch (debuf[i]) {
-		case '0': {
-			if (p->pLeft != NULL) {//¦pªG½s½X¬°0¨Ã¥B¥ª«Ä¤l¤£¬°ªÅ¡A¨º»òp«ü¦Vpªº¥ª«Ä¤l¡C
-				p = p->pLeft;
-				break;
-			}
-			else {              //¦pªG¥ª«Ä¤l¬°ªÅ¡A«h¦¹µ²ÂI¬°¸­¤lµ²ÂI¡A¨ú¥X¨ä¦Ç«×­È§@¬°¸Ñ½Xµ²ªG
-				b = p->gray;
-				fwrite(&b, sizeof(char), 1, hufout);
-
-				p = head;
-				i = i - 1;//¦¹®Éi«ü¦V¤U¤@­Ó½X¤¸ªº¶}©l¦ì¸m¡A¦ı¬Ofor´`ÀôÁÙ¦³¤@­Ói++©Ò¥H¦¹®É»İ­n±Ni´î¤@
-				break;
-			}
-
-		}
-		case '1': {
-			if (p->pRight != NULL) {//¦pªG½s½X¬°1¨Ã¥B¥k«Ä¤l«Ä¤l¤£¬°ªÅ¡A¨º»òp«ü¦Vpªº¥k«Ä¤l¡C
-				p = p->pRight;
-				break;
-			}
-
-			else {//¦pªG¥k«Ä¤l«Ä¤l¬°ªÅ¡A«h¦¹µ²ÂI¬°¸­¤lµ²ÂI¡A¨ú¥X¨ä¦Ç«×­È§@¬°¸Ñ½Xµ²ªG
-				b = p->gray;
-				fwrite(&b, sizeof(char), 1, hufout);
-				p = head;
-				i = i - 1;
-				break;
-			}
-		}
-		default: break;
-		}
-	}
-	b = p->gray;//¤W­±ªºswitch»y¥y¥¼¯à²Î­p¥ª«á¤@­Ó¸Ñ½Xµ²ªG¡A©Ò¥H¦b¦¹²Î­p¤@¤U
-	fwrite(&b, sizeof(char), 1, hufout);
+// åˆå§‹åŒ–ç¯€é»æ•¸çµ„
+void init(struct SNode* p, int n) {
+    for (int i = 0; i < n; i++) {
+        p[i].freq = 0;
+        p[i].depth = 0;
+        p[i].gray = i;
+        p[i].pPar = NULL;
+        p[i].pLeft = NULL;
+        p[i].pRight = NULL;
+        p[i].code = NULL;
+    }
 }
 
+// çµ±è¨ˆç°åº¦å€¼çš„é »æ•¸
+void freqadd(unsigned char n) {
+    nodes[n].freq++;
+}
+
+// æ·»åŠ ç¯€é»åˆ°è‡¨æ™‚éšŠåˆ—ä¸­ï¼ˆæŒ‰é »ç‡å‡åºï¼‰
+void addToList(struct SNode* pNode) {
+    if (head == NULL) {
+        head = pNode;
+    }
+    else if (pNode->freq < head->freq) {
+        pNode->pPar = head;
+        head = pNode;
+    }
+    else {
+        struct SNode* p = head;
+        while (p->pPar && p->pPar->freq <= pNode->freq) {
+            p = p->pPar;
+        }
+        pNode->pPar = p->pPar;
+        p->pPar = pNode;
+    }
+}
+
+// æ§‹å»º Huffman ç·¨ç¢¼æ¨¹
+void createCodeTree() {
+    int idx = 256;
+    while (head && head->pPar) {
+        struct SNode* p1 = head;
+        struct SNode* p2 = head->pPar;
+        head = head->pPar->pPar;
+
+        tree[idx].freq = p1->freq + p2->freq;
+        tree[idx].pLeft = p1;
+        tree[idx].pRight = p2;
+        p1->pPar = &tree[idx];
+        p2->pPar = &tree[idx];
+
+        addToList(&tree[idx]);
+        idx++;
+    }
+    totalNodes = idx;
+}
+
+// ç”Ÿæˆç·¨ç¢¼ï¼ˆéè¿´è™•ç†ï¼‰
+void generateCode(struct SNode* node, const char* code, int depth) {
+    if (!node) return;
+
+    node->depth = depth;
+    if (!node->pLeft && !node->pRight) {
+        node->code = strdup(code);
+    }
+    else {
+        char leftCode[depth + 2];
+        char rightCode[depth + 2];
+        snprintf(leftCode, sizeof(leftCode), "%s0", code);
+        snprintf(rightCode, sizeof(rightCode), "%s1", code);
+        generateCode(node->pLeft, leftCode, depth + 1);
+        generateCode(node->pRight, rightCode, depth + 1);
+    }
+}
+// Huffman ç·¨ç¢¼
+void huffmanEncode(const char* inputFile, const char* outputFile) {
+    FILE* fpin = fopen(inputFile, "rb");
+    if (!fpin) {
+        perror("Input file open error");
+        return;
+    }
+    FILE* fpout = fopen(outputFile, "wb");
+    if (!fpout) {
+        perror("Output file open error");
+        fclose(fpin);
+        return;
+    }
+
+    unsigned char buffer[1024];
+    init(nodes, 256);
+    init(tree, 512);
+
+    // çµ±è¨ˆé »ç‡
+    fread(buffer, 54, 1, fpin);  // è·³éæ–‡ä»¶é ­
+    size_t len;
+    while ((len = fread(buffer, 1, sizeof(buffer), fpin)) > 0) {
+        for (size_t i = 0; i < len; i++) {
+            freqadd(buffer[i]);
+        }
+    }
+
+    // å»ºæ§‹ Huffman æ¨¹
+    for (int i = 0; i < 256; i++) {
+        if (nodes[i].freq > 0) {
+            addToList(&nodes[i]);
+			
+        }
+    }
+    createCodeTree();
+    generateCode(&tree[totalNodes - 1], "", 0);
+
+    // å¯«å…¥ç·¨ç¢¼æ–‡ä»¶
+    rewind(fpin);
+    fread(buffer, 54, 1, fpin);  // å¯«å…¥æ–‡ä»¶é ­
+    fwrite(buffer, 54, 1, fpout);
+
+    while ((len = fread(buffer, 1, sizeof(buffer), fpin)) > 0) {
+        for (size_t i = 0; i < len; i++) {
+			
+            struct SNode* node = &nodes[buffer[i]];
+            fwrite(node->code, 1, strlen(node->code), fpout);
+			printf("%d\n",node->code);
+        }
+    }
+
+    fclose(fpin);
+    fclose(fpout);
+}
+
+// Huffman è§£ç¢¼
+void huffmanDecode(const char* encodedFile, const char* decodedFile) {
+    FILE* fpin = fopen(encodedFile, "rb");
+    if (!fpin) {
+        perror("Encoded file open error");
+        return;
+    }
+    FILE* fpout = fopen(decodedFile, "wb");
+    if (!fpout) {
+        perror("Decoded file open error");
+        fclose(fpin);
+        return;
+    }
+
+    unsigned char buffer[1024];
+    fread(buffer, 54, 1, fpin);  // è®€å…¥æ–‡ä»¶é ­
+    fwrite(buffer, 54, 1, fpout);
+
+    struct SNode* node = &tree[totalNodes - 1];
+    int bit;
+    while ((bit = fgetc(fpin)) != EOF) {
+        node = (bit == '0') ? node->pLeft : node->pRight;
+
+        if (!node->pLeft && !node->pRight) {
+            fputc(node->gray, fpout);
+            node = &tree[totalNodes - 1];
+        }
+    }
+
+    fclose(fpin);
+    fclose(fpout);
+}
 
 int main() {
-	char ans = 0;
-	huffmancode();
-	printf("»İ­n¸Ñ½X¶Ü¡Hy(¸Ñ½X)/n(¤£¸Ñ½X)\n");
-	scanf("%c", &ans);
-	switch (ans) {
-	case 'y':printf("¸Ñ½X¥¿¦b¶i¦æ¤¤......\n\n");
-		decode();//¸Ñ½X
-		printf("¸Ñ½X¤w§¹¦¨¡A½Ğ¨ì·½¤å¥ó©Ò¦b¥Ø¿ı¬d¬İµ²ªG\n\n");
-		break;
-	default:break;
-	}
-	return 0;
+    char choice;
+    printf("é–‹å§‹é€²è¡Œ Huffman ç·¨ç¢¼...\n");
+    huffmanEncode("lena.bmp", "huffman_encoded.txt");
 
+    printf("æ˜¯å¦é€²è¡Œè§£ç¢¼ï¼Ÿ(y/n): ");
+    scanf(" %c", &choice);
+
+    if (choice == 'y' || choice == 'Y') {
+        printf("è§£ç¢¼é€²è¡Œä¸­...\n");
+        huffmanDecode("huffman_encoded.txt", "decoded.bmp");
+        printf("è§£ç¢¼å®Œæˆï¼Œè«‹æª¢æŸ¥ decoded.bmp æ–‡ä»¶ã€‚\n");
+    }
+    else {
+        printf("æ“ä½œå®Œæˆã€‚\n");
+    }
+
+    return 0;
 }
