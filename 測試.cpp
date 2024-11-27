@@ -138,7 +138,7 @@ void huffmanEncode(const char* inputFile, const char* outputFile) {
 			
             struct SNode* node = &nodes[buffer[i]];
             fwrite(node->code, 1, strlen(node->code), fpout);
-			printf("%d\n",node->code);
+			//printf("%d\n",node->code);
         }
     }
 
@@ -172,6 +172,7 @@ void huffmanDecode(const char* encodedFile, const char* decodedFile) {
         if (!node->pLeft && !node->pRight) {
             fputc(node->gray, fpout);
             node = &tree[totalNodes - 1];
+			//printf("%d\n",bit);
         }
     }
 
@@ -182,15 +183,15 @@ void huffmanDecode(const char* encodedFile, const char* decodedFile) {
 int main() {
     char choice;
     printf("開始進行 Huffman 編碼...\n");
-    huffmanEncode("lena.bmp", "huffman_encoded.txt");
+    huffmanEncode("lenna.bmp", "huffman_encoded.txt");
 
     printf("是否進行解碼？(y/n): ");
     scanf(" %c", &choice);
 
     if (choice == 'y' || choice == 'Y') {
         printf("解碼進行中...\n");
-        huffmanDecode("huffman_encoded.txt", "decoded.bmp");
-        printf("解碼完成，請檢查 decoded.bmp 文件。\n");
+        huffmanDecode("huffman_encoded.txt", "lenna_r.bmp");
+        printf("解碼完成，請檢查 lenna_r.bmp 文件。\n");
     }
     else {
         printf("操作完成。\n");
